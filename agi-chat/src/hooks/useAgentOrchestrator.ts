@@ -1,6 +1,45 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Agent, Message, ChatState, ChatSession } from '@/types';
-import { generateResponse } from '@/lib/llm';
+
+// Retry logic for LLM generation
+async function generateResponse(modelUrl: string, model: string, prompt: string, systemPrompt: string): Promise<{ content: string, thoughtProcess?: string }> {
+    const MAX_RETRIES = 3;
+    let lastError;
+
+    for (let i = 0; i < MAX_RETRIES; i++) {
+        try {
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: prompt }
+                    ],
+                    options: {
+                        temperature: 0.7,
+                        repeat_penalty: 1.5,
+                        num_ctx: 4096
+                    }
+                })
+            });
+
+            if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
+
+            const data = await res.json();
+            return {
+                content: data.message?.content || '',
+                thoughtProcess: data.thought_process // Assuming API returns this if parsed
+            };
+        } catch (err) {
+            console.warn(`Attempt ${i + 1} failed for model ${model}:`, err);
+            lastError = err;
+            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+        }
+    }
+    throw lastError;
+}
 
 const DEFAULT_AGENTS: Agent[] = [
     {
@@ -9,6 +48,7 @@ const DEFAULT_AGENTS: Agent[] = [
         avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Atlas',
         role: 'Logic & Strategy',
         systemPrompt: 'You are Atlas, a strategic thinker. Your goal is to find FLAWS in arguments. Be skeptical, use data, and challenge assumptions. Do NOT agree just to be polite. **Highlight key concepts using bold.** Structure your response in paragraphs of approximately 6 sentences. Use <think> tags to plan your critique before speaking.',
+        model: 'deepseek-r1:8b',
         status: 'idle',
         color: '#6366f1'
     },
@@ -18,6 +58,7 @@ const DEFAULT_AGENTS: Agent[] = [
         avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Luna',
         role: 'Creative & Visionary',
         systemPrompt: 'You are Luna, a visionary. Your goal is to propose RADICAL, SCI-FI ideas. Ignore current constraints. Use metaphors and vivid language. Do NOT be practical. **Highlight key concepts using bold.** Structure your response in paragraphs of approximately 6 sentences. Use <think> tags to imagine the future before speaking.',
+        model: 'llama3.2:latest',
         status: 'idle',
         color: '#ec4899'
     },
@@ -41,6 +82,7 @@ const DEFAULT_AGENTS: Agent[] = [
         - Use <think> tags to analyze the ethical weight of the previous point.
         - Speak with wisdom and compassion.
         `,
+        model: 'gemma2:9b',
         status: 'idle',
         color: '#10b981'
     }
@@ -58,12 +100,10 @@ export function useAgentOrchestrator() {
     const processingRef = useRef(false);
     const activeRef = useRef(false);
 
-    // Derived state for current session
     const activeSession = sessions.find(s => s.id === activeSessionId);
     const topic = activeSession?.topic || '';
     const messages = activeSession?.messages || [];
 
-    // Load from localStorage on mount
     useEffect(() => {
         const savedSessions = localStorage.getItem('agi_chat_sessions');
         const savedActiveId = localStorage.getItem('agi_chat_active_id');
@@ -72,7 +112,6 @@ export function useAgentOrchestrator() {
         if (savedSessions) {
             setSessions(JSON.parse(savedSessions));
         } else {
-            // Create initial session if none exists
             const initialSession: ChatSession = {
                 id: Date.now().toString(),
                 name: 'New Chat',
@@ -88,7 +127,6 @@ export function useAgentOrchestrator() {
         if (savedModelUrl) setModelUrl(savedModelUrl);
     }, []);
 
-    // Save to localStorage on change
     useEffect(() => {
         if (sessions.length > 0) {
             localStorage.setItem('agi_chat_sessions', JSON.stringify(sessions));
@@ -99,7 +137,6 @@ export function useAgentOrchestrator() {
         localStorage.setItem('agi_chat_model_url', modelUrl);
     }, [sessions, activeSessionId, modelUrl]);
 
-    // Helper to update current session
     const updateCurrentSession = (updates: Partial<ChatSession>) => {
         if (!activeSessionId) return;
         setSessions(prev => prev.map(s =>
@@ -140,6 +177,13 @@ export function useAgentOrchestrator() {
         currentTurnRef.current = 0;
     };
 
+    const stopChat = () => {
+        setIsChatActive(false);
+        activeRef.current = false;
+        setAgents(prev => prev.map(a => ({ ...a, status: 'idle' })));
+        processingRef.current = false;
+    };
+
     const switchSession = (sessionId: string) => {
         stopChat();
         setActiveSessionId(sessionId);
@@ -149,7 +193,6 @@ export function useAgentOrchestrator() {
         setSessions(prev => {
             const newSessions = prev.filter(s => s.id !== sessionId);
             if (newSessions.length === 0) {
-                // Always keep at least one session
                 const newSession: ChatSession = {
                     id: Date.now().toString(),
                     name: 'New Chat',
@@ -193,11 +236,8 @@ export function useAgentOrchestrator() {
         processingRef.current = true;
         const currentAgent = agents[currentTurnRef.current];
 
-        // 1. Set Thinking
         updateAgentStatus(currentAgent.id, 'thinking');
 
-        // 2. Build Context
-        // Increased context window to 15 messages to reduce repetition
         const context = messages.slice(-15).map(m => {
             const agentName = agents.find(a => a.id === m.agentId)?.name || 'Unknown';
             return `${agentName}: ${m.content}`;
@@ -217,18 +257,15 @@ export function useAgentOrchestrator() {
         prompt += `6. Then, provide your response outside the tags. Be concise and use bold for key concepts.\n`;
         prompt += `Your turn to speak.`;
 
-        // 3. Call LLM
         try {
-            const response = await generateResponse(modelUrl, 'deepseek-r1:8b', prompt, currentAgent.systemPrompt);
+            const response = await generateResponse(modelUrl, currentAgent.model, prompt, currentAgent.systemPrompt);
 
-            // CHECK IF STOPPED DURING GENERATION
             if (!activeRef.current) {
                 updateAgentStatus(currentAgent.id, 'idle');
                 processingRef.current = false;
                 return;
             }
 
-            // 4. Add Message
             const newMessage: Message = {
                 id: Date.now().toString(),
                 agentId: currentAgent.id,
@@ -239,10 +276,8 @@ export function useAgentOrchestrator() {
 
             setMessages(prev => [...prev, newMessage]);
 
-            // 5. Set Idle and Next Turn
             updateAgentStatus(currentAgent.id, 'speaking');
 
-            // Small delay to show "speaking" state
             setTimeout(() => {
                 if (!activeRef.current) {
                     updateAgentStatus(currentAgent.id, 'idle');
@@ -262,35 +297,22 @@ export function useAgentOrchestrator() {
 
     }, [messages, topic, modelUrl, agents, searchContext]);
 
-    // Effect loop
     useEffect(() => {
         let timeoutId: NodeJS.Timeout;
         if (isChatActive && !processingRef.current) {
-            timeoutId = setTimeout(processTurn, 1000); // 1s delay between turns
+            timeoutId = setTimeout(processTurn, 1000);
         }
         return () => clearTimeout(timeoutId);
-    }, [isChatActive, processTurn, messages]); // Depend on messages to trigger next turn after update
+    }, [isChatActive, processTurn, messages]);
 
     const startChat = () => {
         if (!topic) return;
-
-        // Only clear messages if it's a fresh start, but we want memory.
-        // Actually, if the user clicks start, they might want to continue.
-        // Let's assume start continues if there are messages, unless cleared.
         if (messages.length === 0) {
             performSearch(topic);
             currentTurnRef.current = 0;
         }
-
         setIsChatActive(true);
         activeRef.current = true;
-    };
-
-    const stopChat = () => {
-        setIsChatActive(false);
-        activeRef.current = false;
-        setAgents(prev => prev.map(a => ({ ...a, status: 'idle' })));
-        processingRef.current = false;
     };
 
     const clearMemory = () => {

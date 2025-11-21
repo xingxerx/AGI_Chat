@@ -1,19 +1,3 @@
-export type AgentStatus = 'idle' | 'thinking' | 'speaking';
-
-export interface Agent {
-  id: string;
-  name: string;
-  avatar: string; // URL or emoji
-  role: string;
-  systemPrompt: string;
-  status: AgentStatus;
-  color: string; // For UI accents
-}
-
-export interface Attachment {
-  type: 'image' | 'file';
-  url: string;
-  name?: string;
 }
 
 export interface Message {
