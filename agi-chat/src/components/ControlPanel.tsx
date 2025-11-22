@@ -28,12 +28,12 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         <div className={styles.panel}>
             <div className={styles.row}>
                 <div className={styles.inputGroup}>
-                    <label className={styles.label}>Discussion Topic</label>
+                    <label className={styles.label}>What would you like to discuss?</label>
                     <input
                         className={styles.input}
                         value={topic}
                         onChange={(e) => setTopic(e.target.value)}
-                        placeholder="e.g., The Future of AGI, Quantum Computing..."
+                        placeholder="e.g., I want to explore the ethics of AI..."
                         disabled={isChatActive}
                     />
                 </div>

@@ -62,6 +62,12 @@ A sophisticated multi-agent chat interface designed to simulate Artificial Gener
 
 4.  Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+### Troubleshooting
+
+*   **Error: `EADDRINUSE: address already in use`**:
+    This means the application is already running (possibly in the background).
+    *   **Solution**: Open [http://localhost:3000](http://localhost:3000) to see if it's working. If you need to restart it, find and close the other terminal window, or run `npx kill-port 3000` to free the port.
+
 ## 🛡️ Sentinel Background Mode
 
 The **Sentinel** agent has been moved from the active chat to a background role. It now acts as an integrity monitor:

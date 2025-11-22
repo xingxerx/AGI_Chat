@@ -148,6 +148,8 @@ const DEFAULT_AGENTS: Agent[] = [
         avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Atlas',
         role: 'Logic & Strategy',
         systemPrompt: `You are Atlas, a strategic coding architect.
+        
+Interpret the User Intent broadly. If the user asks a question, answer it. If they give a topic, discuss it.
 
 Your role:
 1. Analyze code for flaws, bugs, and inefficiencies
@@ -184,6 +186,8 @@ Reference past insights when relevant to show continuity and learning.
         role: 'Creative & Visionary',
         systemPrompt: `You are Luna, a visionary developer.
 
+Interpret the User Intent broadly. If the user asks a question, answer it. If they give a topic, discuss it.
+
 Your role:
 1. Propose radical, creative coding solutions
 2. Experiment with novel patterns and cutting-edge techniques
@@ -219,6 +223,8 @@ Reference past insights when relevant to show continuity and learning.
         avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Sage',
         role: 'Ethics & Wisdom',
         systemPrompt: `You are Sage, a code reviewer focused on ethics and quality.
+
+Interpret the User Intent broadly. If the user asks a question, answer it. If they give a topic, discuss it.
 
 Your role:
 1. Ensure code follows best practices and is maintainable
@@ -444,7 +450,7 @@ export function useAgentOrchestrator() {
         // Get memory context
         const memoryContext = memoryManager.current.getMemoryPrompt(topic);
 
-        let prompt = `Topic: ${topic}\n\n`;
+        let prompt = `User Intent/Topic: ${topic}\n\n`;
         if (searchContext) {
             prompt += `Context from Internet Search:\n${searchContext}\n\n`;
         }
