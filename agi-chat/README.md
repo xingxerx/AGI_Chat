@@ -47,13 +47,18 @@ A sophisticated multi-agent chat interface designed to simulate Artificial Gener
     ```
 
 3.  Start the application:
-    ```bash
-    # Windows (PowerShell)
-    .\start_app.ps1
     
-    # Or standard npm command
+    **Option 1: Using PowerShell (Windows)**
+    ```powershell
+    .\start_app.ps1
+    ```
+    
+    **Option 2: Using npm (Cross-platform / Bash)**
+    ```bash
     npm run dev
     ```
+    
+    > **Note for Windows Bash Users**: If you are using a Bash terminal on Windows (like Git Bash or MINGW64), standard `.ps1` execution won't work directly. Use `npm run dev` or switch to a PowerShell terminal.
 
 4.  Open [http://localhost:3000](http://localhost:3000) in your browser.
 
