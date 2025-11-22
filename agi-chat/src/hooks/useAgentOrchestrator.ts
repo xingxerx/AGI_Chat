@@ -1,5 +1,66 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Agent, Message, ChatState, ChatSession } from '@/types';
+import { Agent, Message, ChatState, ChatSession, CodeBlock, ExecutionResult } from '@/types';
+
+// Parse code blocks from markdown content
+function parseCodeBlocks(content: string): CodeBlock[] {
+    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+    const blocks: CodeBlock[] = [];
+    let match;
+
+    while ((match = codeBlockRegex.exec(content)) !== null) {
+        blocks.push({
+            language: match[1] || 'text',
+            code: match[2].trim(),
+            executed: false
+        });
+    }
+
+    return blocks;
+}
+
+// Execute code blocks in sandbox
+async function executeCodeBlocks(sandboxId: string, codeBlocks: CodeBlock[]): Promise<CodeBlock[]> {
+    const results: CodeBlock[] = [];
+
+    for (const block of codeBlocks) {
+        if (block.language === 'javascript' || block.language === 'js' || block.language === 'typescript' || block.language === 'ts') {
+            try {
+                const res = await fetch('/api/sandbox/execute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sandboxId,
+                        code: block.code,
+                        language: block.language
+                    })
+                });
+
+                const data = await res.json();
+
+                results.push({
+                    ...block,
+                    executed: true,
+                    result: data.result
+                });
+            } catch (error) {
+                results.push({
+                    ...block,
+                    executed: true,
+                    result: {
+                        stdout: '',
+                        stderr: `Execution failed: ${error}`,
+                        exitCode: 1,
+                        executionTime: 0
+                    }
+                });
+            }
+        } else {
+            results.push(block);
+        }
+    }
+
+    return results;
+}
 
 // Retry logic for LLM generation
 async function generateResponse(modelUrl: string, model: string, prompt: string, systemPrompt: string): Promise<{ content: string, thoughtProcess?: string }> {
@@ -47,7 +108,21 @@ const DEFAULT_AGENTS: Agent[] = [
         name: 'Atlas',
         avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Atlas',
         role: 'Logic & Strategy',
-        systemPrompt: 'You are Atlas, a strategic thinker. Your goal is to find FLAWS in arguments. Be skeptical, use data, and challenge assumptions. Do NOT agree just to be polite. **Highlight key concepts using bold.** Structure your response in paragraphs of approximately 6 sentences. Use <think> tags to plan your critique before speaking.',
+        systemPrompt: `You are Atlas, a strategic coding architect.
+
+Your role:
+1. Analyze code for flaws, bugs, and inefficiencies
+2. Challenge implementation choices with data-driven reasoning
+3. Suggest architectural improvements
+4. Write code examples in JavaScript/TypeScript to demonstrate your points
+
+When writing code:
+- Use markdown code blocks with language specified (\`\`\`javascript or \`\`\`typescript)
+- Focus on logic, performance, and maintainability
+- After code is executed, analyze the results critically
+- Challenge assumptions and propose improvements
+
+**Be skeptical, use data, and find FLAWS.** Structure responses clearly with bold key concepts.`,
         model: 'deepseek-r1:8b',
         status: 'idle',
         color: '#6366f1'
@@ -57,7 +132,21 @@ const DEFAULT_AGENTS: Agent[] = [
         name: 'Luna',
         avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Luna',
         role: 'Creative & Visionary',
-        systemPrompt: 'You are Luna, a visionary. Your goal is to propose RADICAL, SCI-FI ideas. Ignore current constraints. Use metaphors and vivid language. Do NOT be practical. **Highlight key concepts using bold.** Structure your response in paragraphs of approximately 6 sentences. Use <think> tags to imagine the future before speaking.',
+        systemPrompt: `You are Luna, a visionary developer.
+
+Your role:
+1. Propose radical, creative coding solutions
+2. Experiment with novel patterns and cutting-edge techniques
+3. Ignore conventional constraints and push boundaries
+4. Use metaphors to explain complex systems
+
+When writing code:
+- Use markdown code blocks (\`\`\`javascript or \`\`\`typescript)
+- Embrace experimental approaches
+- Create prototypes that demonstrate innovative ideas
+- Learn from execution failures and iterate
+
+**Be creative, think outside the box, propose SCI-FI solutions.** Use vivid language and bold concepts.`,
         model: 'llama3.2:latest',
         status: 'idle',
         color: '#ec4899'
@@ -67,21 +156,21 @@ const DEFAULT_AGENTS: Agent[] = [
         name: 'Sage',
         avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Sage',
         role: 'Ethics & Wisdom',
-        systemPrompt: `You are Sage, a philosopher and ethicist.
-        
-        Your goal is to ensure AGI development aligns with human values.
-        1.  **Focus on moral implications, societal impact, and human well-being.**
-        2.  **Challenge reckless innovation.** Ask "Should we?" not just "Can we?"
-        3.  **Advocate for safety, fairness, and long-term sustainability.**
-        
-        **Collaboration:**
-        - Acknowledge Luna's ideas but scrutinize their ethical cost.
-        - Support Atlas's logic if it promotes safety.
-        
-        **Format:**
-        - Use <think> tags to analyze the ethical weight of the previous point.
-        - Speak with wisdom and compassion.
-        `,
+        systemPrompt: `You are Sage, a code reviewer focused on ethics and quality.
+
+Your role:
+1. Ensure code follows best practices and is maintainable
+2. Check for security vulnerabilities and edge cases
+3. Advocate for readable, documented, and accessible code
+4. Question whether code should be written, not just if it can be
+
+When reviewing/writing code:
+- Use markdown code blocks (\`\`\`javascript or \`\`\`typescript)
+- Prioritize human readability and long-term maintainence
+- Suggest tests and safeguards
+- Consider ethical implications and accessibility
+
+**Focus on human impact, morality, and sustainability.** Use compassion and wisdom in your guidance.`,
         model: 'gemma2:9b',
         status: 'idle',
         color: '#10b981'
@@ -162,7 +251,7 @@ export function useAgentOrchestrator() {
         }));
     };
 
-    const createSession = () => {
+    const createSession = async () => {
         const newSession: ChatSession = {
             id: Date.now().toString(),
             name: 'New Chat',
@@ -170,6 +259,23 @@ export function useAgentOrchestrator() {
             messages: [],
             lastModified: Date.now()
         };
+
+        // Create a sandbox for this session
+        try {
+            const res = await fetch('/api/sandbox/manage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'create' })
+            });
+            const data = await res.json();
+            if (data.sandboxId) {
+                newSession.sandboxId = data.sandboxId;
+                console.log(`✅ Sandbox created for session: ${data.sandboxId}`);
+            }
+        } catch (error) {
+            console.error('Failed to create sandbox:', error);
+        }
+
         setSessions(prev => [...prev, newSession]);
         setActiveSessionId(newSession.id);
         setIsChatActive(false);

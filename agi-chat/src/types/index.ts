@@ -1,3 +1,33 @@
+export interface Agent {
+  id: string;
+  name: string;
+  avatar: string;
+  role: string;
+  systemPrompt: string;
+  model: string;
+  status: 'idle' | 'thinking' | 'speaking';
+  color: string;
+}
+
+export interface Attachment {
+  type: string;
+  url: string;
+  name: string;
+}
+
+export interface ExecutionResult {
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+  executionTime: number;
+  error?: string;
+}
+
+export interface CodeBlock {
+  language: string;
+  code: string;
+  executed: boolean;
+  result?: ExecutionResult;
 }
 
 export interface Message {
@@ -7,6 +37,7 @@ export interface Message {
   thoughtProcess?: string; // The internal monologue (DeepSeek R1 style)
   timestamp: number;
   attachments?: Attachment[];
+  codeBlocks?: CodeBlock[]; // Code blocks detected in the message
 }
 
 export interface ChatState {
@@ -15,10 +46,12 @@ export interface ChatState {
   messages: Message[];
   agents: Agent[];
 }
+
 export interface ChatSession {
   id: string;
   name: string;
   topic: string;
   messages: Message[];
   lastModified: number;
+  sandboxId?: string; // Associated sandbox container ID
 }
