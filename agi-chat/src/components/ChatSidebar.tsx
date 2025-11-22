@@ -2,6 +2,8 @@ import React from 'react';
 import styles from './ChatSidebar.module.css';
 import { ChatSession, SentinelHealth } from '@/types';
 import SentinelMonitor from './SentinelMonitor';
+import { MemoryPanel } from './MemoryPanel';
+import { MemoryEntry } from '@/lib/memory';
 
 interface ChatSidebarProps {
     sessions: ChatSession[];
@@ -10,6 +12,7 @@ interface ChatSidebarProps {
     onCreateSession: () => void;
     onDeleteSession: (id: string) => void;
     aiHealth?: SentinelHealth | null;
+    memories: MemoryEntry[];
 }
 
 const ChatSidebar: React.FC<ChatSidebarProps> = ({
@@ -18,7 +21,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     onSwitchSession,
     onCreateSession,
     onDeleteSession,
-    aiHealth
+    aiHealth,
+    memories
 }) => {
     return (
         <div className={styles.sidebar}>
@@ -59,6 +63,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     ))}
             </div>
             <SentinelMonitor aiHealth={aiHealth} />
+            <MemoryPanel memories={memories} />
         </div>
     );
 };

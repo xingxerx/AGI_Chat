@@ -23,7 +23,8 @@ const ChatInterface: React.FC = () => {
         activeSessionId,
         createSession,
         switchSession,
-        deleteSession
+        deleteSession,
+        memories
     } = useAgentOrchestrator();
 
     // Sentinel AI monitoring
@@ -45,6 +46,7 @@ const ChatInterface: React.FC = () => {
                 onCreateSession={createSession}
                 onDeleteSession={deleteSession}
                 aiHealth={aiHealth}
+                memories={memories}
             />
             <div className={styles.container}>
                 {/* Agents Header */}

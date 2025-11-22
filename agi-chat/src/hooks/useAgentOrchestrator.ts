@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Agent, Message, ChatState, ChatSession, CodeBlock, ExecutionResult } from '@/types';
-import { MemoryManager } from '@/lib/memory';
+import { MemoryManager, MemoryEntry } from '@/lib/memory';
 
 // Parse code blocks from markdown content
 function parseCodeBlocks(content: string): CodeBlock[] {
@@ -258,6 +258,7 @@ export function useAgentOrchestrator() {
     const [isChatActive, setIsChatActive] = useState(false);
     const [agents, setAgents] = useState<Agent[]>(DEFAULT_AGENTS);
     const [searchContext, setSearchContext] = useState<string>('');
+    const [memories, setMemories] = useState<MemoryEntry[]>([]);
 
     const currentTurnRef = useRef(0);
     const processingRef = useRef(false);
@@ -300,6 +301,11 @@ export function useAgentOrchestrator() {
         }
         localStorage.setItem('agi_chat_model_url', modelUrl);
     }, [sessions, activeSessionId, modelUrl]);
+
+    // Load initial memories
+    useEffect(() => {
+        setMemories(memoryManager.current.getAllMemories());
+    }, []);
 
     const updateCurrentSession = (updates: Partial<ChatSession>) => {
         if (!activeSessionId) return;
@@ -502,6 +508,8 @@ export function useAgentOrchestrator() {
                         tags: [currentAgent.name, topic]
                     });
                 });
+                // Update memory state
+                setMemories(memoryManager.current.getAllMemories());
             }
 
             updateAgentStatus(currentAgent.id, 'speaking');
@@ -567,6 +575,7 @@ export function useAgentOrchestrator() {
         activeSessionId,
         createSession,
         switchSession,
-        deleteSession
+        deleteSession,
+        memories
     };
 }
