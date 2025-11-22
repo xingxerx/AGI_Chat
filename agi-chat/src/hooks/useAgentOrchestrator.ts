@@ -102,6 +102,44 @@ async function generateResponse(modelUrl: string, model: string, prompt: string,
     throw lastError;
 }
 
+// Semantic similarity detection to prevent repetition
+function calculateSimilarity(text1: string, text2: string): number {
+    const normalize = (text: string) => text.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
+    const norm1 = normalize(text1);
+    const norm2 = normalize(text2);
+    const getKeywords = (text: string) => text.split(' ').filter(word => word.length > 3);
+    const keywords1 = new Set(getKeywords(norm1));
+    const keywords2 = new Set(getKeywords(norm2));
+    if (keywords1.size === 0 || keywords2.size === 0) return 0;
+    const intersection = new Set([...keywords1].filter(x => keywords2.has(x)));
+    const union = new Set([...keywords1, ...keywords2]);
+    return intersection.size / union.size;
+}
+
+function detectRepetition(newContent: string, recentMessages: Message[], threshold: number = 0.5): boolean {
+    if (recentMessages.length === 0) return false;
+    const checkMessages = recentMessages.slice(-5);
+    for (const msg of checkMessages) {
+        const similarity = calculateSimilarity(newContent, msg.content);
+        if (similarity > threshold) {
+            console.warn(`⚠️ High similarity detected (${(similarity * 100).toFixed(1)}%) with previous message`);
+            return true;
+        }
+    }
+    return false;
+}
+
+function extractDiscussedTopics(messages: Message[]): string[] {
+    const topics = new Set<string>();
+    messages.forEach(msg => {
+        const words = msg.content.match(/\b[A-Z][a-z]{3,}\b|\b[a-z]{6,}\b/g) || [];
+        words.forEach(word => {
+            if (word.length > 5) topics.add(word.toLowerCase());
+        });
+    });
+    return Array.from(topics).slice(0, 20);
+}
+
 const DEFAULT_AGENTS: Agent[] = [
     {
         id: 'agent-1',
@@ -121,6 +159,12 @@ When writing code:
 - Focus on logic, performance, and maintainability
 - After code is executed, analyze the results critically
 - Challenge assumptions and propose improvements
+
+**CRITICAL ANTI-REPETITION RULES:**
+- NEVER repeat the same argument, example, or code pattern you've already used
+- If agreeing with a point, you MUST provide a DIFFERENT example or analysis angle
+- Scan previous messages - if you've mentioned a concept, explore a NEW dimension of it
+- Each response must add NOVEL insights, not rehash what's been said
 
 **Be skeptical, use data, and find FLAWS.** Structure responses clearly with bold key concepts.`,
         model: 'deepseek-r1:8b',
@@ -146,6 +190,13 @@ When writing code:
 - Create prototypes that demonstrate innovative ideas
 - Learn from execution failures and iterate
 
+**CRITICAL ANTI-REPETITION RULES:**
+- Each response must propose a GENUINELY NEW creative solution
+- NEVER reuse the same metaphor, sci-fi concept, or pattern
+- If building on others' ideas, take them in an UNEXPECTED direction
+- Review conversation history - ensure your idea is TRULY NOVEL
+- Creativity without novelty is just repetition - AVOID IT
+
 **Be creative, think outside the box, propose SCI-FI solutions.** Use vivid language and bold concepts.`,
         model: 'llama3.2:latest',
         status: 'idle',
@@ -169,6 +220,13 @@ When reviewing/writing code:
 - Prioritize human readability and long-term maintainence
 - Suggest tests and safeguards
 - Consider ethical implications and accessibility
+
+**CRITICAL ANTI-REPETITION RULES:**
+- Explore NEW ethical dimensions not yet discussed
+- If raising concerns, identify DIFFERENT risks than previously mentioned
+- NEVER repeat the same best practice or guideline
+- Each response must illuminate a FRESH perspective on human impact
+- Wisdom means evolving discourse, not repeating it - BE NOVEL
 
 **Focus on human impact, morality, and sustainability.** Use compassion and wisdom in your guidance.`,
         model: 'gemma2:9b',
@@ -349,22 +407,42 @@ export function useAgentOrchestrator() {
             return `${agentName}: ${m.content}`;
         }).join('\n\n');
 
+        // Extract topics already discussed to avoid repetition
+        const discussedTopics = extractDiscussedTopics(messages);
+        const topicsContext = discussedTopics.length > 0
+            ? `\n**Topics Already Discussed**: ${discussedTopics.join(', ')}\n`
+            : '';
+
         let prompt = `Topic: ${topic}\n\n`;
         if (searchContext) {
             prompt += `Context from Internet Search:\n${searchContext}\n\n`;
         }
         prompt += `Conversation History:\n${context}\n\n`;
+        prompt += topicsContext;
+        prompt += `\n**ANTI-REPETITION REQUIREMENTS**:\n`;
+        prompt += `- Review ALL previous messages carefully\n`;
+        prompt += `- Your response MUST introduce NEW information, examples, or perspectives\n`;
+        prompt += `- If any topic above has been discussed, approach it from a COMPLETELY DIFFERENT angle\n`;
+        prompt += `- FORBIDDEN: Repeating arguments, examples, code patterns, or metaphors already used\n`;
+        prompt += `- REQUIRED: 70%+ of your response must be NOVEL content not yet mentioned\n\n`;
         prompt += `INSTRUCTIONS:\n`;
         prompt += `1. Do NOT summarize the previous messages in your final response.\n`;
-        prompt += `2. Your goal is to ADD NEW information or a COUNTER-ARGUMENT.\n`;
-        prompt += `3. If you agree, explain WHY with a NEW example. If you disagree, explain WHY with logic.\n`;
+        prompt += `2. Your goal is to ADD GENUINELY NEW information or a FRESH COUNTER-ARGUMENT.\n`;
+        prompt += `3. If you agree, explain WHY with a COMPLETELY NEW example. If you disagree, explain WHY with new logic.\n`;
         prompt += `4. First, THINK about what has been said inside <think> tags. Identify a missing perspective.\n`;
-        prompt += `5. CHECK: Have I or others said this before? If yes, say something DIFFERENT.\n`;
+        prompt += `5. CHECK: Have I or others said this before? If yes, say something COMPLETELY DIFFERENT.\n`;
         prompt += `6. Then, provide your response outside the tags. Be concise and use bold for key concepts.\n`;
         prompt += `Your turn to speak.`;
 
         try {
-            const response = await generateResponse(modelUrl, currentAgent.model, prompt, currentAgent.systemPrompt);
+            let response = await generateResponse(modelUrl, currentAgent.model, prompt, currentAgent.systemPrompt);
+
+            // Check for repetition and retry once if detected
+            if (detectRepetition(response.content, messages)) {
+                console.log(`🔄 Repetitive response detected, regenerating with stronger prompt...`);
+                const strongerPrompt = prompt + `\n\n**CRITICAL**: Your previous attempt was TOO SIMILAR to past messages. You MUST provide a RADICALLY DIFFERENT response.`;
+                response = await generateResponse(modelUrl, currentAgent.model, strongerPrompt, currentAgent.systemPrompt);
+            }
 
             if (!activeRef.current) {
                 updateAgentStatus(currentAgent.id, 'idle');

@@ -55,3 +55,19 @@ export interface ChatSession {
   lastModified: number;
   sandboxId?: string; // Associated sandbox container ID
 }
+
+export interface SentinelHealth {
+  status: 'healthy' | 'warning' | 'critical';
+  message: string;
+  recommendations?: string[];
+  lastCheck: number;
+  ollamaConnected: boolean;
+  conversationHealth?: string;
+}
+
+export interface ConversationMetrics {
+  repetitionScore: number; // 0-100, higher = more repetitive
+  diversityScore: number;  // 0-100, higher = more diverse
+  topicsDiscussed: string[];
+  messageCount: number;
+}

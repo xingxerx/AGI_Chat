@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './ChatSidebar.module.css';
-import { ChatSession } from '@/types';
+import { ChatSession, SentinelHealth } from '@/types';
 import SentinelMonitor from './SentinelMonitor';
 
 interface ChatSidebarProps {
@@ -9,6 +9,7 @@ interface ChatSidebarProps {
     onSwitchSession: (id: string) => void;
     onCreateSession: () => void;
     onDeleteSession: (id: string) => void;
+    aiHealth?: SentinelHealth | null;
 }
 
 const ChatSidebar: React.FC<ChatSidebarProps> = ({
@@ -16,7 +17,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     activeSessionId,
     onSwitchSession,
     onCreateSession,
-    onDeleteSession
+    onDeleteSession,
+    aiHealth
 }) => {
     return (
         <div className={styles.sidebar}>
@@ -56,7 +58,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                         </div>
                     ))}
             </div>
-            <SentinelMonitor />
+            <SentinelMonitor aiHealth={aiHealth} />
         </div>
     );
 };
