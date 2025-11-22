@@ -5,6 +5,7 @@ import MessageBubble from './MessageBubble';
 import ControlPanel from './ControlPanel';
 import ChatSidebar from './ChatSidebar';
 import { useAgentOrchestrator } from '@/hooks/useAgentOrchestrator';
+import { useSentinelAI } from '@/hooks/useSentinelAI';
 
 const ChatInterface: React.FC = () => {
     const {
@@ -25,6 +26,9 @@ const ChatInterface: React.FC = () => {
         deleteSession
     } = useAgentOrchestrator();
 
+    // Sentinel AI monitoring
+    const { health: aiHealth } = useSentinelAI(messages, isChatActive, topic);
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Auto-scroll to bottom
@@ -40,6 +44,7 @@ const ChatInterface: React.FC = () => {
                 onSwitchSession={switchSession}
                 onCreateSession={createSession}
                 onDeleteSession={deleteSession}
+                aiHealth={aiHealth}
             />
             <div className={styles.container}>
                 {/* Agents Header */}

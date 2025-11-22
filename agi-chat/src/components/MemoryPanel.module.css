@@ -1,0 +1,116 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-top: 1rem;
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    max-height: 300px;
+    overflow: hidden;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.header h3 {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.count {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    background: rgba(15, 23, 42, 0.5);
+    padding: 0.125rem 0.375rem;
+    border-radius: 9999px;
+}
+
+.memoryList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.memoryList::-webkit-scrollbar {
+    width: 4px;
+}
+
+.memoryList::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.memoryList::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 2px;
+}
+
+.memoryItem {
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    transition: all 0.2s ease;
+}
+
+.memoryItem:hover {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: rgba(148, 163, 184, 0.2);
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-bottom: 0.5rem;
+}
+
+.tag {
+    font-size: 0.625rem;
+    color: #94a3b8;
+    background: rgba(30, 41, 59, 0.5);
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.content {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.8125rem;
+    color: #cbd5e1;
+    line-height: 1.4;
+}
+
+.meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.625rem;
+    color: #64748b;
+}
+
+.type {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: #818cf8;
+}
+
+.empty {
+    text-align: center;
+    color: #64748b;
+    font-size: 0.875rem;
+    padding: 1rem 0;
+    font-style: italic;
+}

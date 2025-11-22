@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Agent, Message, ChatState, ChatSession, CodeBlock, ExecutionResult } from '@/types';
+import { MemoryManager } from '@/lib/memory';
 
 // Parse code blocks from markdown content
 function parseCodeBlocks(content: string): CodeBlock[] {
@@ -160,6 +161,11 @@ When writing code:
 - After code is executed, analyze the results critically
 - Challenge assumptions and propose improvements
 
+**MEMORY SYSTEM:**
+You have access to accumulated knowledge from previous conversations. 
+This appears in the "Previous Knowledge" section of your prompt.
+Reference past insights when relevant to show continuity and learning.
+
 **CRITICAL ANTI-REPETITION RULES:**
 - NEVER repeat the same argument, example, or code pattern you've already used
 - If agreeing with a point, you MUST provide a DIFFERENT example or analysis angle
@@ -189,6 +195,11 @@ When writing code:
 - Embrace experimental approaches
 - Create prototypes that demonstrate innovative ideas
 - Learn from execution failures and iterate
+
+**MEMORY SYSTEM:**
+You have access to accumulated knowledge from previous conversations. 
+This appears in the "Previous Knowledge" section of your prompt.
+Reference past insights when relevant to show continuity and learning.
 
 **CRITICAL ANTI-REPETITION RULES:**
 - Each response must propose a GENUINELY NEW creative solution
@@ -221,6 +232,11 @@ When reviewing/writing code:
 - Suggest tests and safeguards
 - Consider ethical implications and accessibility
 
+**MEMORY SYSTEM:**
+You have access to accumulated knowledge from previous conversations. 
+This appears in the "Previous Knowledge" section of your prompt.
+Reference past insights when relevant to show continuity and learning.
+
 **CRITICAL ANTI-REPETITION RULES:**
 - Explore NEW ethical dimensions not yet discussed
 - If raising concerns, identify DIFFERENT risks than previously mentioned
@@ -246,6 +262,7 @@ export function useAgentOrchestrator() {
     const currentTurnRef = useRef(0);
     const processingRef = useRef(false);
     const activeRef = useRef(false);
+    const memoryManager = useRef(new MemoryManager());
 
     const activeSession = sessions.find(s => s.id === activeSessionId);
     const topic = activeSession?.topic || '';
@@ -341,11 +358,16 @@ export function useAgentOrchestrator() {
         currentTurnRef.current = 0;
     };
 
-    const stopChat = () => {
+    const stopChat = async () => {
         setIsChatActive(false);
         activeRef.current = false;
         setAgents(prev => prev.map(a => ({ ...a, status: 'idle' })));
         processingRef.current = false;
+
+        // Generate session summary when chat stops
+        if (messages.length > 5 && activeSessionId) {
+            await memoryManager.current.summarizeSession(activeSessionId, messages, topic);
+        }
     };
 
     const switchSession = (sessionId: string) => {
@@ -413,9 +435,15 @@ export function useAgentOrchestrator() {
             ? `\n**Topics Already Discussed**: ${discussedTopics.join(', ')}\n`
             : '';
 
+        // Get memory context
+        const memoryContext = memoryManager.current.getMemoryPrompt(topic);
+
         let prompt = `Topic: ${topic}\n\n`;
         if (searchContext) {
             prompt += `Context from Internet Search:\n${searchContext}\n\n`;
+        }
+        if (memoryContext) {
+            prompt += `Previous Knowledge:\n${memoryContext}\n\n`;
         }
         prompt += `Conversation History:\n${context}\n\n`;
         prompt += topicsContext;
@@ -459,6 +487,22 @@ export function useAgentOrchestrator() {
             };
 
             setMessages(prev => [...prev, newMessage]);
+
+            // Extract insights from the new message
+            const boldText = newMessage.content.match(/\*\*(.*?)\*\*/g);
+            if (boldText && boldText.length > 0) {
+                boldText.forEach(insight => {
+                    memoryManager.current.addMemory({
+                        id: `${Date.now()}-${Math.random()}`,
+                        sessionId: activeSessionId!,
+                        timestamp: Date.now(),
+                        type: 'insight',
+                        content: insight.replace(/\*\*/g, ''),
+                        importance: 7,
+                        tags: [currentAgent.name, topic]
+                    });
+                });
+            }
 
             updateAgentStatus(currentAgent.id, 'speaking');
 
