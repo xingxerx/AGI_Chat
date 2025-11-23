@@ -1,8 +1,8 @@
 {
-  "generatedAt": 1763842736151,
+  "generatedAt": 1763859631757,
   "files": {
-    "src/hooks/useAgentOrchestrator.ts": "e620e9aeaddd83188538d45b94751faaa473436e29e6867061b21440879688aa",
-    "src/components/ChatInterface.tsx": "e345017fba7d19b6c5445fdc849e723680a80c4ae63270b547ab99db8aec80ac",
+    "src/hooks/useAgentOrchestrator.ts": "75af089c226fcf603e7f63442e4ce298dac65dfc825730356c2772441677ee53",
+    "src/components/ChatInterface.tsx": "535ded6f4643a8fe4b09ffea3b0d99392d0a7fc1283c73ec4205cb50b0eef23f",
     "src/app/api/generate/route.ts": "199c5f3e0883d2880d5bf48d2fc738602138c82a55c7bb5b1005e2e73175d548",
     "src/lib/llm.ts": "4630a40d06455b2560a29acdd5fb318dc3517d01823682837d77365fe91acb1b"
   }

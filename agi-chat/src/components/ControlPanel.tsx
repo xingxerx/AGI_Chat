@@ -11,6 +11,8 @@ interface ControlPanelProps {
     modelUrl: string;
     setModelUrl: (url: string) => void;
     hasMessages: boolean;
+    onInject: (content: string) => void;
+    isRefiningTopic?: boolean;
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -22,20 +24,58 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     onClearMemory,
     modelUrl,
     setModelUrl,
-    hasMessages
+    hasMessages,
+    onInject,
+    isRefiningTopic = false
 }) => {
+    const [suggestion, setSuggestion] = React.useState('');
+
+    const handleInject = () => {
+        if (suggestion.trim()) {
+            onInject(suggestion);
+            setSuggestion('');
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleInject();
+        }
+    };
+
     return (
         <div className={styles.panel}>
             <div className={styles.row}>
                 <div className={styles.inputGroup}>
-                    <label className={styles.label}>What would you like to discuss?</label>
-                    <input
-                        className={styles.input}
-                        value={topic}
-                        onChange={(e) => setTopic(e.target.value)}
-                        placeholder="e.g., I want to explore the ethics of AI..."
-                        disabled={isChatActive}
-                    />
+                    <label className={styles.label}>
+                        {isChatActive ? 'Inject Suggestion / New Topic' : 'What would you like to discuss?'}
+                    </label>
+                    {isChatActive ? (
+                        <div className={styles.injectContainer}>
+                            <input
+                                className={styles.input}
+                                value={suggestion}
+                                onChange={(e) => setSuggestion(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                placeholder="Type a suggestion to guide the agents..."
+                            />
+                            <button
+                                className={styles.injectBtn}
+                                onClick={handleInject}
+                                disabled={!suggestion.trim()}
+                            >
+                                Send
+                            </button>
+                        </div>
+                    ) : (
+                        <input
+                            className={styles.input}
+                            value={topic}
+                            onChange={(e) => setTopic(e.target.value)}
+                            placeholder="e.g., I want to explore the ethics of AI..."
+                        />
+                    )}
                 </div>
 
                 {isChatActive ? (
@@ -43,8 +83,12 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                         Pause
                     </button>
                 ) : (
-                    <button className={`${styles.button} ${styles.startBtn}`} onClick={onStart}>
-                        {hasMessages ? 'Resume' : 'Start'}
+                    <button
+                        className={`${styles.button} ${styles.startBtn}`}
+                        onClick={onStart}
+                        disabled={isRefiningTopic}
+                    >
+                        {isRefiningTopic ? 'Thinking...' : (hasMessages ? 'Resume' : 'Start')}
                     </button>
                 )}
             </div>

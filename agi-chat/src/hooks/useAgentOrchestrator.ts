@@ -547,12 +547,43 @@ export function useAgentOrchestrator() {
         return () => clearTimeout(timeoutId);
     }, [isChatActive, processTurn, messages]);
 
-    const startChat = () => {
+    const [isRefiningTopic, setIsRefiningTopic] = useState(false);
+
+    const refineTopic = async (rawInput: string): Promise<string> => {
+        try {
+            const prompt = `
+            User Input: "${rawInput}"
+            
+            Task: Extract the core topic from the user's input. 
+            If it's a question, keep it as a question. 
+            If it's a statement, convert it into a concise discussion topic (2-5 words).
+            Remove any conversational filler like "I want to talk about" or "Let's discuss".
+            
+            Output ONLY the refined topic. No other text.
+            `;
+
+            // Use a fast model for this if available, otherwise default
+            const response = await generateResponse(modelUrl, 'llama3.2:latest', prompt, 'You are a helpful NLU assistant.');
+            return response.content.trim().replace(/^["']|["']$/g, '');
+        } catch (error) {
+            console.error("Topic refinement failed:", error);
+            return rawInput; // Fallback to raw input
+        }
+    };
+
+    const startChat = async () => {
         if (!topic) return;
+
         if (messages.length === 0) {
-            performSearch(topic);
+            setIsRefiningTopic(true);
+            const refinedTopic = await refineTopic(topic);
+            setTopic(refinedTopic);
+            setIsRefiningTopic(false);
+
+            performSearch(refinedTopic);
             currentTurnRef.current = 0;
         }
+
         setIsChatActive(true);
         activeRef.current = true;
     };
@@ -564,6 +595,22 @@ export function useAgentOrchestrator() {
         setSearchContext('');
         localStorage.removeItem('agi_chat_topic');
         localStorage.removeItem('agi_chat_messages');
+    };
+
+    const injectMessage = (content: string) => {
+        if (!content.trim()) return;
+
+        const newMessage: Message = {
+            id: Date.now().toString(),
+            agentId: 'user',
+            content: content,
+            timestamp: Date.now()
+        };
+
+        setMessages(prev => [...prev, newMessage]);
+
+        // If chat is active, this will naturally be included in the context for the next agent turn
+        // If chat is paused, it will be there when resumed
     };
 
     return {
@@ -582,6 +629,8 @@ export function useAgentOrchestrator() {
         createSession,
         switchSession,
         deleteSession,
-        memories
+        memories,
+        injectMessage,
+        isRefiningTopic
     };
 }

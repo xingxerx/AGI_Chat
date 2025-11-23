@@ -24,7 +24,8 @@ const ChatInterface: React.FC = () => {
         createSession,
         switchSession,
         deleteSession,
-        memories
+        memories,
+        injectMessage
     } = useAgentOrchestrator();
 
     // Sentinel AI monitoring
@@ -66,6 +67,22 @@ const ChatInterface: React.FC = () => {
                         </div>
                     ) : (
                         messages.map(msg => {
+                            if (msg.agentId === 'user') {
+                                const userAgent = {
+                                    id: 'user',
+                                    name: 'You',
+                                    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=User',
+                                    role: 'User Input',
+                                    systemPrompt: '',
+                                    model: '',
+                                    status: 'idle' as const,
+                                    color: '#64748b'
+                                };
+                                return (
+                                    <MessageBubble key={msg.id} message={msg} agent={userAgent} />
+                                );
+                            }
+
                             const agent = agents.find(a => a.id === msg.agentId);
                             if (!agent) return null;
                             return (
@@ -88,6 +105,7 @@ const ChatInterface: React.FC = () => {
                         modelUrl={modelUrl}
                         setModelUrl={setModelUrl}
                         hasMessages={messages.length > 0}
+                        onInject={injectMessage}
                     />
                 </div>
             </div>

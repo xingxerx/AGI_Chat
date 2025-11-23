@@ -95,6 +95,301 @@
     color: #94a3b8;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
+
+    .panel {
+        background: rgba(30, 41, 59, 0.8);
+        backdrop-filter: blur(12px);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .row {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-end;
+    }
+
+    .inputGroup {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .label {
+        font-size: 0.875rem;
+        color: #94a3b8;
+        font-weight: 500;
+    }
+
+    .input {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        color: #f8fafc;
+        font-size: 1rem;
+        transition: all 0.2s;
+    }
+
+    .input:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+
+    .button {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        white-space: nowrap;
+    }
+
+    .startBtn {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+    }
+
+    .startBtn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    .stopBtn {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .stopBtn:hover {
+        background: rgba(239, 68, 68, 0.3);
+    }
+
+    .configSection {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .configTitle {
+        font-size: 0.75rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+    }
+
+    .clearBtn {
+        background: transparent;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        color: #94a3b8;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+
+    .clearBtn:hover {
+        background: rgba(148, 163, 184, 0.1);
+        color: #f1f5f9;
+    }
+
+    .injectContainer {
+        display: flex;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    .injectBtn {
+        background: rgba(99, 102, 241, 0.2);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        color: #818cf8;
+        padding: 0 1.25rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    font-weight: 500;
+}
+
+.input {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: #f8fafc;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    white-space: nowrap;
+}
+
+.startBtn {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+}
+
+.startBtn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.stopBtn {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.stopBtn:hover {
+    background: rgba(239, 68, 68, 0.3);
+}
+
+.configSection {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.configTitle {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+.clearBtn {
+    background: transparent;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    color: #94a3b8;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+}
+
+.panel {
+    background: rgba(30, 41, 59, 0.8);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.row {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.inputGroup {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.label {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.input {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: #f8fafc;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    white-space: nowrap;
+}
+
+.startBtn {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+}
+
+.startBtn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.stopBtn {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.stopBtn:hover {
+    background: rgba(239, 68, 68, 0.3);
+}
+
+.configSection {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.configTitle {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+.clearBtn {
+    background: transparent;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    color: #94a3b8;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
     cursor: pointer;
     font-size: 0.875rem;
     transition: all 0.2s;
@@ -103,4 +398,34 @@
 .clearBtn:hover {
     background: rgba(148, 163, 184, 0.1);
     color: #f1f5f9;
+}
+
+.injectContainer {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.injectBtn {
+    background: rgba(99, 102, 241, 0.2);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    color: #818cf8;
+    padding: 0 1.25rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.injectBtn:hover:not(:disabled) {
+    background: rgba(99, 102, 241, 0.3);
+    color: #a5b4fc;
+}
+
+.injectBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: rgba(148, 163, 184, 0.1);
+    border-color: rgba(148, 163, 184, 0.1);
+    color: #64748b;
 }
