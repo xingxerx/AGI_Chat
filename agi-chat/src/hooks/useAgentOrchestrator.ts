@@ -510,10 +510,23 @@ export function useAgentOrchestrator() {
         try {
             let response = await generateResponse(modelUrl, currentAgent.model, prompt, currentAgent.systemPrompt);
 
-            // Check for repetition and retry once if detected
-            if (detectRepetition(response.content, messages)) {
+            // Auto-inject pivot warning every 10 turns
+            if (currentTurnRef.current > 0 && currentTurnRef.current % 10 === 0) {
+                const concepts = extractDiscussedTopics(messages);
+                const pivotWarning: Message = {
+                    id: `pivot-${Date.now()}`,
+                    agentId: 'system',
+                    content: `⚠️ **CONVERSATION CHECKPOINT** ⚠️\n\nThe discussion is becoming repetitive. Frequently mentioned concepts: ${concepts.slice(0, 5).join(', ')}\n\n**NEXT AGENT**: You MUST pivot. Choose ONE:\n1. Provide a CONCRETE code example (architecture, TypeScript class, etc.)\n2. Shift to a DIFFERENT technical domain (performance, security, debugging)\n3. Ask a specific implementation question\n\n**DO NOT continue philosophical/abstract discussion.**`,
+                    timestamp: Date.now()
+                };
+                setMessages(prev => [...prev, pivotWarning]);
+                console.log('🔄 Pivot warning injected at turn', currentTurnRef.current);
+            }
+
+            // Check for repetition with LOWER threshold (more sensitive)
+            if (detectRepetition(response.content, messages, 0.4)) {
                 console.log(`🔄 Repetitive response detected, regenerating with stronger prompt...`);
-                const strongerPrompt = prompt + `\n\n**CRITICAL**: Your previous attempt was TOO SIMILAR to past messages. You MUST provide a RADICALLY DIFFERENT response.`;
+                const strongerPrompt = prompt + `\n\n**CRITICAL**: Your previous attempt was TOO SIMILAR to past messages. Provide a COMPLETELY DIFFERENT response with:\n- A NEW concrete example\n- A DIFFERENT technical angle\n- AVOID these overused concepts: ${extractDiscussedTopics(messages).slice(0, 3).join(', ')}`;
                 response = await generateResponse(modelUrl, currentAgent.model, strongerPrompt, currentAgent.systemPrompt);
             }
 

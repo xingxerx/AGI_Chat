@@ -71,7 +71,14 @@ const ChatInterface: React.FC = () => {
 
             {safeMode && (
                 <div className={styles.safeModeBanner}>
-                    🔒 SAFE MODE ACTIVE - Network Enabled (Docker Isolated)
+                    <span>🔒 SAFE MODE ACTIVE - Network Enabled (Docker Isolated)</span>
+                    <button
+                        onClick={handleVerifyAndMount}
+                        className={styles.verifyBtn}
+                        title="Verify integrity and exit Safe Mode"
+                    >
+                        ✓ Verify & Mount Updates
+                    </button>
                 </div>
             )}
 
@@ -145,10 +152,11 @@ const ChatInterface: React.FC = () => {
                         setModelUrl={setModelUrl}
                         hasMessages={messages.length > 0}
                         onInject={injectMessage}
+                        onForcePivot={() => { }}
                     />
                 </div>
             </div>
-        </div >
+        </div>
     );
 };
 

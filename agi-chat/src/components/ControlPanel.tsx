@@ -12,6 +12,7 @@ interface ControlPanelProps {
     setModelUrl: (url: string) => void;
     hasMessages: boolean;
     onInject: (content: string) => void;
+    onForcePivot: () => void;
     isRefiningTopic?: boolean;
 }
 
@@ -26,6 +27,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     setModelUrl,
     hasMessages,
     onInject,
+    onForcePivot,
     isRefiningTopic = false
 }) => {
     const [suggestion, setSuggestion] = React.useState('');
@@ -106,6 +108,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 <button onClick={onClearMemory} className={styles.clearBtn} title="Clear Chat Memory">
                     Clear Memory
                 </button>
+                {isChatActive && (
+                    <button onClick={onForcePivot} className={styles.pivotBtn} title="Force conversation to pivot away from repetitive topics">
+                        🔄 Force Pivot
+                    </button>
+                )}
             </div>
         </div>
     );

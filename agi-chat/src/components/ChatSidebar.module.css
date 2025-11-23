@@ -8,6 +8,111 @@
     flex-shrink: 0;
 }
 
+/* Project Info Section */
+.projectInfo {
+    border-bottom: 1px solid #333;
+    background: linear-gradient(135deg, #1e1e1e 0%, #252525 100%);
+}
+
+.projectHeader {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.projectHeader:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.projectTitle {
+    margin: 0;
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+.toggleBtn {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    transition: color 0.2s;
+}
+
+.toggleBtn:hover {
+    color: #fff;
+}
+
+.aboutContent {
+    padding: 0 1rem 1rem 1rem;
+    color: #ccc;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.description {
+    margin: 0 0 1rem 0;
+    color: #bbb;
+}
+
+.features h3,
+.techStack h3 {
+    margin: 0.75rem 0 0.5rem 0;
+    font-size: 0.9rem;
+    color: #fff;
+}
+
+.features ul {
+    margin: 0;
+    padding-left: 1.2rem;
+    list-style: none;
+}
+
+.features li {
+    margin-bottom: 0.4rem;
+    position: relative;
+    padding-left: 0.5rem;
+}
+
+.features li::before {
+    content: '•';
+    position: absolute;
+    left: -0.8rem;
+    color: #3b82f6;
+    font-weight: bold;
+}
+
+.features strong {
+    color: #fff;
+}
+
+.techStack p {
+    margin: 0;
+    color: #888;
+    font-family: monospace;
+}
+
 .header {
     padding: 1rem;
     border-bottom: 1px solid #333;
