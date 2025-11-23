@@ -6,6 +6,8 @@ import ControlPanel from './ControlPanel';
 import ChatSidebar from './ChatSidebar';
 import { useAgentOrchestrator } from '@/hooks/useAgentOrchestrator';
 import { useSentinelAI } from '@/hooks/useSentinelAI';
+import { useSecurity } from '@/context/SecurityContext';
+import LockdownOverlay from './LockdownOverlay';
 
 const ChatInterface: React.FC = () => {
     const {
@@ -25,11 +27,31 @@ const ChatInterface: React.FC = () => {
         switchSession,
         deleteSession,
         memories,
-        injectMessage
+        injectMessage,
+        recreateSandbox
     } = useAgentOrchestrator();
 
     // Sentinel AI monitoring
     const { health: aiHealth } = useSentinelAI(messages, isChatActive, topic);
+
+    const { isLockdown, checkIntegrity } = useSecurity();
+    const [safeMode, setSafeMode] = React.useState(false);
+
+    const handleEnterSafeMode = async () => {
+        setSafeMode(true);
+        await recreateSandbox(true); // Enable network
+    };
+
+    const handleVerifyAndMount = async () => {
+        try {
+            await fetch('/api/integrity', { method: 'POST' });
+            await checkIntegrity();
+            setSafeMode(false);
+            await recreateSandbox(false); // Disable network (default)
+        } catch (error) {
+            console.error("Failed to mount updates:", error);
+        }
+    };
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -40,6 +62,19 @@ const ChatInterface: React.FC = () => {
 
     return (
         <div className={styles.layout}>
+            {isLockdown && !safeMode && (
+                <LockdownOverlay
+                    onEnterSafeMode={handleEnterSafeMode}
+                    onVerifyAndMount={handleVerifyAndMount}
+                />
+            )}
+
+            {safeMode && (
+                <div className={styles.safeModeBanner}>
+                    🔒 SAFE MODE ACTIVE - Network Enabled (Docker Isolated)
+                </div>
+            )}
+
             <ChatSidebar
                 sessions={sessions}
                 activeSessionId={activeSessionId}
@@ -62,8 +97,12 @@ const ChatInterface: React.FC = () => {
                     {messages.length === 0 ? (
                         <div className={styles.emptyState}>
                             <div className={styles.emptyIcon}>💬</div>
-                            <h3>Ready to Start</h3>
-                            <p>Select a topic and start the discussion to see the agents in action.</p>
+                            <h3>{safeMode ? 'Safe Mode Active' : 'Ready to Start'}</h3>
+                            <p>
+                                {safeMode
+                                    ? 'You are in a secure, isolated environment. Agents can browse the web and execute code via Docker.'
+                                    : 'Select a topic and start the discussion to see the agents in action.'}
+                            </p>
                         </div>
                     ) : (
                         messages.map(msg => {
@@ -109,7 +148,7 @@ const ChatInterface: React.FC = () => {
                     />
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

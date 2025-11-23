@@ -49,7 +49,14 @@ export async function buildSandboxImage(): Promise<void> {
 /**
  * Create a new sandbox container
  */
-export async function createSandbox(): Promise<string> {
+export interface SandboxOptions {
+    enableNetwork?: boolean;
+}
+
+/**
+ * Create a new sandbox container
+ */
+export async function createSandbox(options: SandboxOptions = {}): Promise<string> {
     try {
         // Ensure image exists
         const images = await docker.listImages({ filters: { reference: [SANDBOX_IMAGE] } });
@@ -57,15 +64,21 @@ export async function createSandbox(): Promise<string> {
             await buildSandboxImage();
         }
 
+        const hostConfig: any = {
+            Memory: MEMORY_LIMIT,
+            AutoRemove: false
+        };
+
+        // Only disable network if NOT enabled explicitly
+        if (!options.enableNetwork) {
+            hostConfig.NetworkMode = 'none';
+        }
+
         const container = await docker.createContainer({
             Image: SANDBOX_IMAGE,
             Cmd: ['tail', '-f', '/dev/null'], // Keep container running
             WorkingDir: '/workspace',
-            HostConfig: {
-                Memory: MEMORY_LIMIT,
-                NetworkMode: 'none', // Disable network access for security
-                AutoRemove: false
-            },
+            HostConfig: hostConfig,
             Tty: true,
             AttachStdin: false,
             AttachStdout: true,
@@ -73,7 +86,7 @@ export async function createSandbox(): Promise<string> {
         });
 
         await container.start();
-        console.log(`✅ Sandbox created: ${container.id}`);
+        console.log(`✅ Sandbox created: ${container.id} (Network: ${options.enableNetwork ? 'ON' : 'OFF'})`);
         return container.id;
     } catch (error) {
         console.error('Failed to create sandbox:', error);

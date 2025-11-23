@@ -3,10 +3,10 @@ import { createSandbox, destroySandbox, resetSandbox, sandboxExists } from '@/li
 
 export async function POST(req: Request) {
     try {
-        const { action, sandboxId } = await req.json();
+        const { action, sandboxId, enableNetwork } = await req.json();
 
         if (action === 'create') {
-            const newSandboxId = await createSandbox();
+            const newSandboxId = await createSandbox({ enableNetwork });
             return NextResponse.json({
                 success: true,
                 sandboxId: newSandboxId

@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   description: "A multi-agent conversation simulation with DeepSeek R1",
 };
 
+import { SecurityProvider } from "@/context/SecurityContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,7 +27,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {children}
+        <SecurityProvider>
+          {children}
+        </SecurityProvider>
       </body>
     </html>
   );

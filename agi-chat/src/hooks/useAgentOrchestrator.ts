@@ -370,6 +370,39 @@ export function useAgentOrchestrator() {
         currentTurnRef.current = 0;
     };
 
+    const recreateSandbox = async (enableNetwork: boolean = false) => {
+        if (!activeSessionId) return;
+
+        // Destroy existing sandbox if any
+        if (activeSession?.sandboxId) {
+            try {
+                await fetch('/api/sandbox/manage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'destroy', sandboxId: activeSession.sandboxId })
+                });
+            } catch (e) {
+                console.warn('Failed to destroy old sandbox', e);
+            }
+        }
+
+        // Create new one
+        try {
+            const res = await fetch('/api/sandbox/manage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'create', enableNetwork })
+            });
+            const data = await res.json();
+            if (data.sandboxId) {
+                updateCurrentSession({ sandboxId: data.sandboxId });
+                console.log(`✅ Sandbox recreated: ${data.sandboxId} (Network: ${enableNetwork})`);
+            }
+        } catch (error) {
+            console.error('Failed to recreate sandbox:', error);
+        }
+    };
+
     const stopChat = async () => {
         setIsChatActive(false);
         activeRef.current = false;
@@ -631,6 +664,7 @@ export function useAgentOrchestrator() {
         deleteSession,
         memories,
         injectMessage,
-        isRefiningTopic
+        isRefiningTopic,
+        recreateSandbox
     };
 }

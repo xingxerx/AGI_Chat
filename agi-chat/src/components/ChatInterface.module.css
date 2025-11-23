@@ -4,6 +4,33 @@
     width: 100vw;
     overflow: hidden;
     background: var(--bg-primary);
+    position: relative;
+}
+
+.safeModeBanner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #334155;
+    color: #38bdf8;
+    text-align: center;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    z-index: 100;
+    border-bottom: 1px solid #475569;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
 }
 
 .container {
