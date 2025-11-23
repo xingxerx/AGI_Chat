@@ -28,7 +28,8 @@ const ChatInterface: React.FC = () => {
         deleteSession,
         memories,
         injectMessage,
-        recreateSandbox
+        recreateSandbox,
+        forcePivot
     } = useAgentOrchestrator();
 
     // Sentinel AI monitoring
@@ -152,7 +153,7 @@ const ChatInterface: React.FC = () => {
                         setModelUrl={setModelUrl}
                         hasMessages={messages.length > 0}
                         onInject={injectMessage}
-                        onForcePivot={() => { }}
+                        onForcePivot={forcePivot}
                     />
                 </div>
             </div>

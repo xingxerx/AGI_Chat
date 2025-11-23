@@ -659,6 +659,38 @@ export function useAgentOrchestrator() {
         // If chat is paused, it will be there when resumed
     };
 
+    const forcePivot = () => {
+        if (messages.length === 0) return;
+
+        const concepts = extractDiscussedTopics(messages);
+        const pivotMessage: Message = {
+            id: `force-pivot-${Date.now()}`,
+            agentId: 'system',
+            content: `🚨 **MANDATORY TOPIC PIVOT** 🚨
+
+The conversation has become repetitive. Overused concepts: **${concepts.slice(0, 10).join(', ')}**
+
+**NEXT AGENT - You MUST do ONE of the following:**
+
+1. **Write actual executable code** - Create a complete TypeScript class/function with proper types, error handling, and comments
+2. **Switch technical domain** - Move to: performance optimization, security vulnerabilities, testing strategies, deployment pipelines, or debugging techniques  
+3. **Provide a concrete use case** - Real-world scenario with specific implementation steps and trade-offs
+4. **Challenge the entire premise** - Question if the discussed approach is even necessary
+
+**STRICTLY FORBIDDEN:**
+- Abstract philosophical discussion
+- Repeating any concept from: ${concepts.slice(0, 5).join(', ')}
+- Generic advice without code examples
+- Vague future predictions
+
+**Your response must be 80%+ NEW content. Start NOW.**`,
+            timestamp: Date.now()
+        };
+
+        setMessages(prev => [...prev, pivotMessage]);
+        console.log('🔄 FORCE PIVOT activated by user');
+    };
+
     return {
         topic,
         setTopic,
@@ -678,6 +710,7 @@ export function useAgentOrchestrator() {
         memories,
         injectMessage,
         isRefiningTopic,
-        recreateSandbox
+        recreateSandbox,
+        forcePivot
     };
 }
