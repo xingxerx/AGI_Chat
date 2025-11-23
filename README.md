@@ -1,6 +1,6 @@
 # AGI Chat
 
-A sophisticated multi-agent chat interface designed to simulate Artificial General Intelligence interactions. This project features distinct AI personas that collaborate, debate, and "think" before responding, all powered by local LLMs via Ollama.
+A sophisticated multi-agent chat interface featuring **real AI agents** with distinct personas that collaborate, debate, and "think" before responding. Each agent is powered by actual LLM models running locally via Ollama—no simulations, just authentic AI conversations.
 
 ## 🌟 Features
 
